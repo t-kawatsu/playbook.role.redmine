@@ -1,0 +1,56 @@
+---
+- name: install libraries for httpd
+  yum: state=present name={{ item }}
+  with_items:
+    - httpd
+    - httpd-devel
+
+- name: create apache user
+  user: 
+    name=apache 
+    comment="Apache" 
+    group=apache
+    groups=develop
+
+- name: change directory owner of redmine
+  sudo: yes
+  file: 
+    recurse: yes
+    owner: "{{ redmine_dir_owner }}"
+    path: "{{ redmine_dir }}"
+
+- name: check whether Passenger is installed or not
+  command:
+    test -f /usr/local/bin/passenger-install-apache2-module
+  register:
+    result
+  failed_when: result.rc not in [0, 1]
+  changed_when: false
+
+- name: install Passenger
+  shell: $SHELL -lc "gem install passenger -q --no-rdoc --no-ri"
+  when: result.rc == 1
+
+- name: Passenger apache module
+  sudo: yes
+  shell: $SHELL -lc "passenger-install-apache2-module --auto"
+  when: result.rc == 1
+
+- name: Passenger apache module setting
+  shell: $SHELL -lc "passenger-install-apache2-module --snippet"
+  register:
+    passenger_snippet_vars
+  changed_when: false
+
+- name: create redmine.conf
+  sudo: yes
+  template:
+    src=redmine.conf.j2
+    dest=/etc/httpd/conf.d/redmine.conf
+
+- name: restart httpd
+  sudo: yes
+  service:
+    name=httpd
+    state=restarted
+    enabled=yes

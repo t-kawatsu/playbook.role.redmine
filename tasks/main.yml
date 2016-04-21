@@ -1,0 +1,9 @@
+---
+- include: redmine.yml
+  tags: [redmine]
+
+- include: httpd.yml
+  tags: [httpd]
+
+- include: project.yml
+  tags: [project]

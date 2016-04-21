@@ -1,0 +1,5 @@
+---
+- name: checkout theme
+  git: 
+    repo=https://github.com/nysenate/nyss-gitlab-redmine-theme.git
+    dest={{ redmine_dir }}/public/themes/nyss-gitlab-redmine-theme
